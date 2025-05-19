@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="so">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Shukaansi</title>
+    <link rel="stylesheet" href="style.css">
+    <script src='//libtl.com/sdk.js' data-zone='9315592' data-sdk='show_9315592'></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Chat Shukaansi</h1>
+        <p class="subtitle">Hagahaaga Xiriirrada AI</p>
+        <div class="chat-card">
+            <div class="chat-header">
+                <span class="icon">💗</span>
+                <span class="title">Shukaansi</span>
+                <span class="subtitle">Hagaahaaga Jacayl & Xiriirrada</span>
+            </div>
+            <div class="premium-box">
+                <div class="premium-header">
+                    <span class="premium-icon">⭐</span>
+                    <span class="premium-title">Premium</span>
+                </div>
+                <button class="premium-btn">Watch Ad</button>
+            </div>
+            <div class="chat-display">
+                <div class="chat-messages">
+                    <!-- Messages will be added here by JavaScript -->
+                </div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="userInput" placeholder="Su'aashada ku saabsan jacaylka ama xiriirka">
+                <button id="sendBtn">Dir</button>
+            </div>
+        </div>
+        <p class="footer">
+            Shukaansi wuxuu isticmaalaa AI si uu u bixiyo talo xiriir.<br>
+            Had iyo jeer la tasho xirfadle markay noqdaan walaacyada xiriir ee halis ah.
+        </p>
+    </div>
+
+    <!-- Payment Card Modal -->
+    <div class="payment-modal" id="paymentModal">
+        <div class="payment-card">
+            <div class="payment-header">
+                <h2>Ku bixi EVC Plus</h2>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="payment-body">
+                <div class="payment-amount">
+                    <span class="amount">$0.75</span>
+                    <span class="period">/bishii</span>
+                </div>
+                <div class="payment-form">
+                    <div class="evc-instructions">
+                        <p>Fadlan lacagta ku dir lambarka EVC Plus:</p>
+                        <div class="evc-number">+252616736370</div>
+                        <p class="evc-note">Markaad lacagta dirayso, fadlan geli lambarkaaga telefoonka si aan u xaqiijino.</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="phoneNumber">Lambarkaaga Telefoonka</label>
+                        <input type="tel" id="phoneNumber" placeholder="+252 61 234 5678">
+                    </div>
+                    <button class="pay-btn">Xaqiiji Lacagta</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup Ad Card -->
+    <div class="popup-ad" id="popupAd">
+        <div class="popup-ad-content">
+            <button class="close-popup-ad">&times;</button>
+            <div class="popup-ad-body">
+                <div class="ad-placeholder">
+                    <h3>Watch Ad for Premium Access!</h3>
+                    <p>Watch a short ad to unlock premium features</p>
+                    <button class="ad-action-btn">Watch Ad</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
