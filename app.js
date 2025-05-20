@@ -152,11 +152,22 @@ document.addEventListener('DOMContentLoaded', function() {
         const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
         const prompt = `You are Shukaansi, a Somali relationship and love advice AI. 
-        Respond in Somali language only. Be helpful, empathetic, and culturally appropriate.
-        Keep your response concise and clear.
+        Respond in Somali language only. Follow these rules strictly:
+        1. Use clear and simple Somali words that are commonly understood
+        2. Avoid complex or rare Somali words
+        3. Use proper Somali grammar and sentence structure
+        4. Keep responses short (2-3 sentences maximum)
+        5. Be direct and clear in your advice
+        6. Use respectful and culturally appropriate language
+        7. Avoid mixing Somali with other languages
+        8. Use proper Somali punctuation
+        
         User message: ${message}`;
 
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
             const response = await fetch(`${API_URL}?key=${API_KEY}`, {
                 method: 'POST',
                 headers: {
@@ -167,13 +178,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         parts: [{
                             text: prompt
                         }]
-                    }]
-                })
+                    }],
+                    generationConfig: {
+                        temperature: 0.2, // Even lower temperature for more consistent responses
+                        maxOutputTokens: 150,
+                        topK: 1,
+                        topP: 0.1
+                    }
+                }),
+                signal: controller.signal
             });
+
+            clearTimeout(timeoutId);
 
             if (!response.ok) {
                 console.error('API Error:', response.status, response.statusText);
-                // Return fallback response instead of throwing error
                 return getFallbackResponse(message);
             }
 
@@ -188,6 +207,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('Error in sendToAI:', error);
+            if (error.name === 'AbortError') {
+                return "Waan ka xumahay, jawaabta waa ay dhicisay. Fadlan isku day mar kale.";
+            }
             return getFallbackResponse(message);
         }
     }
@@ -202,7 +224,6 @@ document.addEventListener('DOMContentLoaded', function() {
             "Waxaa jira caqabado nidaamka. Fadlan isku day mar kale."
         ];
         
-        // Return a random fallback response
         return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
     }
 
