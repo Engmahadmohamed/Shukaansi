@@ -162,6 +162,22 @@ document.addEventListener('DOMContentLoaded', function() {
         7. Avoid mixing Somali with other languages
         8. Use proper Somali punctuation
         
+        For advice or instructions, format your response with numbered steps like this:
+        
+        1. First step or point
+        
+        2. Second step or point
+        
+        3. Third step or point
+        
+        Important formatting rules:
+        - Each numbered step must be on its own line
+        - Add a blank line between each step
+        - Start each step with a number followed by a period
+        - Keep each step to one or two sentences
+        - If the question is about steps, advice, or instructions, always use this numbered format
+        - For general questions or emotional support, use regular paragraph format
+        
         User message: ${message}`;
 
         try {
@@ -180,8 +196,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         }]
                     }],
                     generationConfig: {
-                        temperature: 0.2, // Even lower temperature for more consistent responses
-                        maxOutputTokens: 150,
+                        temperature: 0.2,
+                        maxOutputTokens: 300, // Increased for better spacing
                         topK: 1,
                         topP: 0.1
                     }
@@ -200,7 +216,18 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('API Response:', data);
 
             if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-                return data.candidates[0].content.parts[0].text;
+                // Format the response to ensure proper spacing
+                let formattedResponse = data.candidates[0].content.parts[0].text;
+                
+                // If the response contains numbered steps, ensure proper spacing
+                if (formattedResponse.match(/^\d+\./m)) {
+                    formattedResponse = formattedResponse
+                        .replace(/(\d+\.)/g, '\n$1') // Add newline before each number
+                        .replace(/\n\n+/g, '\n\n') // Remove extra blank lines
+                        .trim(); // Remove leading/trailing whitespace
+                }
+                
+                return formattedResponse;
             } else {
                 console.error('Invalid response format:', data);
                 return getFallbackResponse(message);
