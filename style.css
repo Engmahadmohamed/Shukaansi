@@ -519,3 +519,130 @@ h1 {
     transform: translateY(0);
     box-shadow: 0 2px 4px rgba(247, 124, 162, 0.3);
 }
+
+/* Premium Features Styles */
+.chat-messages.premium-active .message.ai {
+    background: linear-gradient(to right, #fff6fa, #ffe0ec);
+    border-left: 3px solid #f77ca2;
+}
+
+.chat-messages.premium-active .message.ai .message-text {
+    color: #d14c7b;
+    font-weight: 500;
+}
+
+.chat-messages.premium-active .message.ai::before {
+    content: '⭐';
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    background: #f77ca2;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    box-shadow: 0 2px 4px rgba(247, 124, 162, 0.3);
+}
+
+/* Premium Input Styles */
+#userInput[placeholder*="Premium"] {
+    background: #fff6fa;
+    border-color: #f77ca2;
+}
+
+#userInput[placeholder*="Premium"]::placeholder {
+    color: #d14c7b;
+    font-weight: 500;
+}
+
+.premium-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.remaining-days {
+    color: #d14c7b;
+    font-size: 0.9em;
+    font-weight: 500;
+    background: #fff6fa;
+    padding: 4px 8px;
+    border-radius: 12px;
+    border: 1px solid #f77ca2;
+}
+
+/* Error Card Styles */
+.error-card {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 3000;
+    justify-content: center;
+    align-items: center;
+}
+
+.error-card.active {
+    display: flex;
+}
+
+.error-content {
+    background: white;
+    width: 90%;
+    max-width: 320px;
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    animation: errorSlideIn 0.3s ease-out;
+}
+
+@keyframes errorSlideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.error-icon {
+    font-size: 2em;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.error-message {
+    color: #d14c7b;
+    font-size: 1.1em;
+    margin: 10px 0 20px 0;
+}
+
+.error-close-btn {
+    background: #f77ca2;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 30px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.error-close-btn:hover {
+    background: #d14c7b;
+    transform: translateY(-1px);
+}
+
+.error-close-btn:active {
+    transform: translateY(0);
+}

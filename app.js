@@ -14,6 +14,11 @@ function initializePopupAds() {
 
     // Show popup ad
     function showPopupAd() {
+        // Don't show ads if user has premium
+        if (localStorage.getItem('shukaansiPremium') === 'true') {
+            return;
+        }
+        
         if (popupAd) {
             popupAd.classList.add('active');
             // Pause the interval while ad is shown
@@ -32,6 +37,11 @@ function initializePopupAds() {
 
     // Handle ad button click
     adActionBtn.addEventListener('click', () => {
+        // Don't show ads if user has premium
+        if (localStorage.getItem('shukaansiPremium') === 'true') {
+            return;
+        }
+        
         // Show rewarded interstitial ad
         show_9315592().then(() => {
             // After ad is watched, show payment modal
@@ -54,6 +64,11 @@ function initializePopupAds() {
 
     // Start the popup ad interval
     function startPopupAdInterval() {
+        // Don't start interval if user has premium
+        if (localStorage.getItem('shukaansiPremium') === 'true') {
+            return;
+        }
+        
         // Clear any existing intervals
         clearInterval(popupAdInterval);
         // Set new interval
@@ -79,8 +94,13 @@ function initializePopupAds() {
 
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize popup ads
-    initializePopupAds();
+    // Check premium status first
+    const isPremium = checkPremiumStatus();
+    
+    // Only initialize popup ads if not premium
+    if (!isPremium) {
+        initializePopupAds();
+    }
 
     // Chat functionality
     const userInput = document.getElementById('userInput');
@@ -224,13 +244,227 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Premium Status Management
+    function checkPremiumStatus() {
+        const premiumData = JSON.parse(localStorage.getItem('shukaansiPremium') || '{"isPremium": false, "paymentDate": null}');
+        
+        // Check if premium is expired (more than 30 days old)
+        if (premiumData.isPremium && premiumData.paymentDate) {
+            const paymentDate = new Date(premiumData.paymentDate);
+            const currentDate = new Date();
+            const daysDiff = Math.floor((currentDate - paymentDate) / (1000 * 60 * 60 * 24));
+            
+            if (daysDiff >= 30) {
+                // Premium expired
+                setPremiumStatus(false, null);
+                return false;
+            }
+        }
+        
+        if (premiumData.isPremium) {
+            updateToPremiumUI();
+            // Hide premium purchase elements
+            hidePremiumPurchaseElements();
+        }
+        return premiumData.isPremium;
+    }
+
+    // Hide premium purchase elements
+    function hidePremiumPurchaseElements() {
+        // Hide premium box if user has active premium
+        const premiumBox = document.querySelector('.premium-box');
+        if (premiumBox) {
+            premiumBox.remove(); // Completely remove the element instead of just hiding it
+        }
+
+        // Hide premium banner if exists
+        const premiumBanner = document.querySelector('.premium-banner');
+        if (premiumBanner) {
+            premiumBanner.remove(); // Completely remove the element
+        }
+    }
+
+    // Show premium purchase elements
+    function showPremiumPurchaseElements() {
+        const container = document.querySelector('.container');
+        const chatCard = document.querySelector('.chat-card');
+        
+        // Create and insert premium box
+        const premiumBox = document.createElement('div');
+        premiumBox.className = 'premium-box';
+        premiumBox.innerHTML = `
+            <div class="premium-header">
+                <span class="premium-title">Shukaansi Premium</span>
+            </div>
+            <a href="*712*616736370*0*75#" class="premium-btn">*712*616736370*0*75#</a>
+            <div class="payment-instructions">
+                <div class="payment-amount">$0.75 /bishii</div>
+                <div class="evc-instructions">
+                    <p>Fadlan lacagta ku dir lambarka EVC Plus:</p>
+                    <div class="evc-number">+252616736370</div>
+                    <p class="evc-note">Markaad lacagta dirayso, fadlan geli lambarkaaga telefoonka si aan u xaqiijino.</p>
+                </div>
+                <div class="form-group">
+                    <label for="phoneNumber">Lambarkaaga Telefoonka</label>
+                    <input type="tel" id="phoneNumber" placeholder="+252 61 234 5678">
+                </div>
+            </div>
+        `;
+        
+        // Insert before chat card
+        if (container && chatCard) {
+            container.insertBefore(premiumBox, chatCard);
+        }
+    }
+
+    // Update premium status with payment date
+    function setPremiumStatus(isPremium, paymentDate = null) {
+        const premiumData = {
+            isPremium: isPremium,
+            paymentDate: paymentDate || new Date().toISOString()
+        };
+        localStorage.setItem('shukaansiPremium', JSON.stringify(premiumData));
+        
+        if (isPremium) {
+            hidePremiumPurchaseElements();
+            // Clear any existing ad intervals
+            clearInterval(popupAdInterval);
+            clearTimeout(popupAdTimeout);
+            // Hide any visible ads
+            const popupAd = document.getElementById('popupAd');
+            if (popupAd) {
+                popupAd.classList.remove('active');
+            }
+            // Enable premium features
+            enablePremiumFeatures();
+        } else {
+            showPremiumPurchaseElements();
+            // Disable premium features
+            disablePremiumFeatures();
+        }
+    }
+
+    // Update premium UI to show remaining days
+    function updateToPremiumUI() {
+        const premiumBox = document.querySelector('.premium-box');
+        const premiumData = JSON.parse(localStorage.getItem('shukaansiPremium') || '{"isPremium": false, "paymentDate": null}');
+        
+        if (premiumData.isPremium && premiumData.paymentDate) {
+            const paymentDate = new Date(premiumData.paymentDate);
+            const currentDate = new Date();
+            const daysDiff = Math.floor((currentDate - paymentDate) / (1000 * 60 * 60 * 24));
+            const remainingDays = 30 - daysDiff;
+            
+            premiumBox.innerHTML = `
+                <div class="premium-header">
+                    <span class="premium-title">Shukaansi Premium</span>
+                </div>
+                <div class="premium-status">
+                    <span class="remaining-days">${remainingDays} maalmood</span>
+                    <button class="premium-btn" disabled>La Iibiyay</button>
+                </div>
+            `;
+        } else {
+            premiumBox.innerHTML = `
+                <div class="premium-header">
+                    <span class="premium-title">Shukaansi Premium</span>
+                </div>
+                <a href="*712*616736370*0*75#" class="premium-btn">*712*616736370*0*75#</a>
+                <div class="payment-instructions">
+                    <div class="payment-amount">$0.75 /bishii</div>
+                    <div class="evc-instructions">
+                        <p>Fadlan lacagta ku dir lambarka EVC Plus:</p>
+                        <div class="evc-number">+252616736370</div>
+                        <p class="evc-note">Markaad lacagta dirayso, fadlan geli lambarkaaga telefoonka si aan u xaqiijino.</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="phoneNumber">Lambarkaaga Telefoonka</label>
+                        <input type="tel" id="phoneNumber" placeholder="+252 61 234 5678">
+                    </div>
+                </div>
+            `;
+        }
+
+        // Enable premium features
+        enablePremiumFeatures();
+    }
+
+    // Enable premium features
+    function enablePremiumFeatures() {
+        // Add premium badge to messages
+        const chatMessages = document.querySelector('.chat-messages');
+        if (chatMessages) {
+            chatMessages.classList.add('premium-active');
+        }
+
+        // Update input placeholder
+        const userInput = document.getElementById('userInput');
+        if (userInput) {
+            userInput.placeholder = "Su'aashadaaga ku qor halkan (Premium)";
+        }
+    }
+
+    // Disable premium features
+    function disablePremiumFeatures() {
+        // Remove premium badge from messages
+        const chatMessages = document.querySelector('.chat-messages');
+        if (chatMessages) {
+            chatMessages.classList.remove('premium-active');
+        }
+
+        // Update input placeholder
+        const userInput = document.getElementById('userInput');
+        if (userInput) {
+            userInput.placeholder = "Su'aashadaaga ku qor halkan";
+        }
+    }
+
+    // Error Card Functionality
+    const errorCard = document.getElementById('errorCard');
+    const errorCloseBtn = document.querySelector('.error-close-btn');
+
+    function showError(message) {
+        const errorMessage = document.querySelector('.error-message');
+        if (errorMessage) {
+            errorMessage.textContent = message;
+        }
+        errorCard.classList.add('active');
+    }
+
+    function hideError() {
+        errorCard.classList.remove('active');
+    }
+
+    // Close error card when clicking the close button
+    errorCloseBtn.addEventListener('click', hideError);
+
+    // Close error card when clicking outside
+    errorCard.addEventListener('click', (e) => {
+        if (e.target === errorCard) {
+            hideError();
+        }
+    });
+
     // Handle payment form submission
     payBtn.addEventListener('click', () => {
         const phoneNumber = document.getElementById('phoneNumber').value;
 
         if (!validatePhoneNumber(phoneNumber)) {
-            alert('Fadlan geli lambar sax ah oo telefoon ah');
+            showError('Fadlan geli lambar sax ah oo telefoon ah');
             return;
+        }
+
+        // Check if user already has active premium
+        const premiumData = JSON.parse(localStorage.getItem('shukaansiPremium') || '{"isPremium": false, "paymentDate": null}');
+        if (premiumData.isPremium && premiumData.paymentDate) {
+            const paymentDate = new Date(premiumData.paymentDate);
+            const currentDate = new Date();
+            const daysDiff = Math.floor((currentDate - paymentDate) / (1000 * 60 * 60 * 24));
+            
+            if (daysDiff < 30) {
+                showError('Waxaad horey u heysaa premium oo socda. Fadlan sug 30 maalmood.');
+                return;
+            }
         }
 
         // Show loading state
@@ -239,12 +473,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Simulate payment verification
         setTimeout(() => {
-            // Simulate successful verification
+            // Set premium status with current date
+            setPremiumStatus(true, new Date().toISOString());
+            
+            // Show success message
             payBtn.textContent = 'Waad ku mahadsantahay!';
             payBtn.style.backgroundColor = '#4CAF50';
-            
-            // Update UI to show premium status
-            updateToPremiumUI();
             
             // Close modal and reset form after 2 seconds
             setTimeout(() => {
@@ -294,19 +528,8 @@ document.addEventListener('DOMContentLoaded', function() {
         e.target.value = value;
     });
 
-    function updateToPremiumUI() {
-        // Update the premium box to show active subscription
-        const premiumBox = document.querySelector('.premium-box');
-        premiumBox.innerHTML = `
-            <b>Shukaansi Premium</b>
-            <p>Waad ku mahadsantahay! Waxaad hadda isticmaali kartaa dhammaan awoodaha Premium.</p>
-            <div class="premium-features">
-                <p>✓ Hel talooyin gaar ah</p>
-                <p>✓ Hel jawaabo dheeraad ah</p>
-                <p>✓ Hel hagitaan xiriir</p>
-            </div>
-        `;
-    }
+    // Initialize premium status check on page load
+    checkPremiumStatus();
 });
 
 // Clean up intervals when page is unloaded
