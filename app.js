@@ -120,14 +120,112 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Function to check daily question limit
+    function checkDailyQuestionLimit() {
+        const today = new Date().toDateString();
+        const questionData = JSON.parse(localStorage.getItem('dailyQuestions') || '{"date": "", "count": 0}');
+        
+        // Reset count if it's a new day
+        if (questionData.date !== today) {
+            questionData.date = today;
+            questionData.count = 0;
+            localStorage.setItem('dailyQuestions', JSON.stringify(questionData));
+        }
+        
+        return questionData.count;
+    }
+
+    // Function to increment question count
+    function incrementQuestionCount() {
+        const today = new Date().toDateString();
+        const questionData = JSON.parse(localStorage.getItem('dailyQuestions') || '{"date": "", "count": 0}');
+        
+        questionData.date = today;
+        questionData.count += 1;
+        localStorage.setItem('dailyQuestions', JSON.stringify(questionData));
+        
+        return questionData.count;
+    }
+
+    async function sendToAI(message) {
+        const API_KEY = 'AIzaSyAvyYhYVO6gGw_tMuJ7cso5BNZPjm1LCME';
+        const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+        const prompt = `You are Shukaansi, a Somali relationship and love advice AI. 
+        Respond in Somali language only. Be helpful, empathetic, and culturally appropriate.
+        Keep your response concise and clear.
+        User message: ${message}`;
+
+        try {
+            const response = await fetch(`${API_URL}?key=${API_KEY}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: prompt
+                        }]
+                    }]
+                })
+            });
+
+            if (!response.ok) {
+                console.error('API Error:', response.status, response.statusText);
+                // Return fallback response instead of throwing error
+                return getFallbackResponse(message);
+            }
+
+            const data = await response.json();
+            console.log('API Response:', data);
+
+            if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+                return data.candidates[0].content.parts[0].text;
+            } else {
+                console.error('Invalid response format:', data);
+                return getFallbackResponse(message);
+            }
+        } catch (error) {
+            console.error('Error in sendToAI:', error);
+            return getFallbackResponse(message);
+        }
+    }
+
+    // Function to provide fallback responses when API is unavailable
+    function getFallbackResponse(message) {
+        const fallbackResponses = [
+            "Waan ka xumahay, hadda waxaa jira caqabad nidaamka. Fadlan isku day mar kale.",
+            "Maanta waxaa jira caqabado nidaamka. Fadlan isku day mar kale.",
+            "Waxaa jira caqabado nidaamka. Fadlan isku day mar kale.",
+            "Waxaa jira caqabado nidaamka. Fadlan isku day mar kale.",
+            "Waxaa jira caqabado nidaamka. Fadlan isku day mar kale."
+        ];
+        
+        // Return a random fallback response
+        return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+    }
+
     async function handleSendMessage() {
         const message = userInput.value.trim();
         if (!message) return;
 
+        // Check if user has premium
+        const isPremium = checkPremiumStatus();
+        
+        // If not premium, check question limit
+        if (!isPremium) {
+            const questionCount = checkDailyQuestionLimit();
+            if (questionCount >= 5) {
+                addMessage('Shukaansi', 'Waxaad horey u isticmaashay 5 su\'aalo maanta. Fadlan iibso Premium si aad u hesho talooyin wanaagsan.', 'ai error');
+                return;
+            }
+        }
+
         // Disable input and button while processing
         userInput.disabled = true;
         sendBtn.disabled = true;
-        sendBtn.textContent = 'La diiwaangelinayo...';
+        sendBtn.textContent = '...';
 
         // Add user message
         addMessage('User', message, 'user');
@@ -142,6 +240,14 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById(loadingId).remove();
             // Add AI response
             addMessage('Shukaansi', response, 'ai');
+            
+            // Increment question count for non-premium users
+            if (!isPremium) {
+                const newCount = incrementQuestionCount();
+                if (newCount >= 5) {
+                    addMessage('Shukaansi', 'Waxaad horey u isticmaashay 5 su\'aalo maanta. Fadlan iibso Premium si aad u hesho talooyin wanaagsan.', 'ai error');
+                }
+            }
         } catch (error) {
             console.error('Error:', error);
             // Remove loading message
@@ -154,54 +260,6 @@ document.addEventListener('DOMContentLoaded', function() {
             sendBtn.disabled = false;
             sendBtn.textContent = 'Dir';
             userInput.focus();
-        }
-    }
-
-    async function sendToAI(message) {
-        const API_KEY = 'AIzaSyDcj_X3fJ9iW9OgA3gkyhTBX5z2PVlF12I';
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
-
-        const prompt = `You are Shukaansi, a Somali relationship and love advice AI. 
-        Respond in Somali language only. Be helpful, empathetic, and culturally appropriate.
-        Keep your response concise and clear.
-        User message: ${message}`;
-
-        try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    contents: [
-                        {
-                            parts: [
-                                {
-                                    text: prompt
-                                }
-                            ]
-                        }
-                    ]
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error('API Error:', errorData);
-                throw new Error('API request failed');
-            }
-
-            const data = await response.json();
-            console.log('API Response:', data);
-
-            if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-                return data.candidates[0].content.parts[0].text;
-            } else {
-                throw new Error('Invalid response format');
-            }
-        } catch (error) {
-            console.error('Error in sendToAI:', error);
-            throw error;
         }
     }
 
@@ -320,62 +378,11 @@ document.addEventListener('DOMContentLoaded', function() {
         addPremiumButtonListener();
     }
 
-    // Function to add click listener to premium button
-    function addPremiumButtonListener() {
-        const premiumBtn = document.querySelector('.premium-btn');
-        if (premiumBtn && !premiumBtn.dataset.listenerAdded) { // Check if listener already added
-            premiumBtn.addEventListener('click', (event) => {
-                event.preventDefault(); // Prevent default action of the link
-                
-                const originalText = premiumBtn.textContent;
-                premiumBtn.textContent = 'Fadlan sug...'; // Indicate waiting
-                premiumBtn.disabled = true; // Disable button during wait
-
-                // Attempt to open phone app with USSD code
-                window.location.href = 'tel:*712*616736370*0*75#';
-
-                // Simulate waiting for payment confirmation
-                setTimeout(() => {
-                    setPremiumStatus(true); // Grant premium after 5 seconds
-                    premiumBtn.textContent = originalText; // Restore button text
-                    premiumBtn.disabled = false; // Re-enable button
-                    // The hidePremiumPurchaseElements() is called within setPremiumStatus(true)
-                }, 5000); // 5000 milliseconds = 5 seconds
-            });
-            premiumBtn.dataset.listenerAdded = 'true'; // Mark as listener added
-        }
-    }
-
-    // Update premium status with payment date
-    function setPremiumStatus(isPremium, paymentDate = null) {
-        const premiumData = {
-            isPremium: isPremium,
-            paymentDate: paymentDate || new Date().toISOString()
-        };
-        localStorage.setItem('shukaansiPremium', JSON.stringify(premiumData));
-        
-        if (isPremium) {
-            hidePremiumPurchaseElements();
-            // Clear any existing ad intervals
-            clearInterval(popupAdInterval);
-            clearTimeout(popupAdTimeout);
-            // Hide any visible ads
-            const popupAd = document.getElementById('popupAd');
-            if (popupAd) {
-                popupAd.classList.remove('active');
-            }
-            // Enable premium features
-            enablePremiumFeatures();
-        } else {
-            showPremiumPurchaseElements();
-            // Disable premium features
-            disablePremiumFeatures();
-        }
-    }
-
     // Update premium UI to show remaining days
     function updateToPremiumUI() {
         const premiumBox = document.querySelector('.premium-box');
+        if (!premiumBox) return; // Exit if premium box doesn't exist
+
         const premiumData = JSON.parse(localStorage.getItem('shukaansiPremium') || '{"isPremium": false, "paymentDate": null}');
         
         if (premiumData.isPremium && premiumData.paymentDate) {
@@ -418,6 +425,58 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Enable premium features
         enablePremiumFeatures();
+    }
+
+    // Function to add click listener to premium button
+    function addPremiumButtonListener() {
+        const premiumBtn = document.querySelector('.premium-btn');
+        if (!premiumBtn || premiumBtn.dataset.listenerAdded) return; // Exit if button doesn't exist or listener already added
+
+        premiumBtn.addEventListener('click', (event) => {
+            event.preventDefault(); // Prevent default action of the link
+            
+            const originalText = premiumBtn.textContent;
+            premiumBtn.textContent = 'Fadlan sug...'; // Indicate waiting
+            premiumBtn.disabled = true; // Disable button during wait
+
+            // Attempt to open phone app with USSD code
+            window.location.href = 'tel:*712*616736370*0*75#';
+
+            // Simulate waiting for payment confirmation
+            setTimeout(() => {
+                setPremiumStatus(true); // Grant premium after 5 seconds
+                premiumBtn.textContent = originalText; // Restore button text
+                premiumBtn.disabled = false; // Re-enable button
+            }, 5000); // 5000 milliseconds = 5 seconds
+        });
+        premiumBtn.dataset.listenerAdded = 'true'; // Mark as listener added
+    }
+
+    // Update premium status with payment date
+    function setPremiumStatus(isPremium, paymentDate = null) {
+        const premiumData = {
+            isPremium: isPremium,
+            paymentDate: paymentDate || new Date().toISOString()
+        };
+        localStorage.setItem('shukaansiPremium', JSON.stringify(premiumData));
+        
+        if (isPremium) {
+            hidePremiumPurchaseElements();
+            // Clear any existing ad intervals
+            clearInterval(popupAdInterval);
+            clearTimeout(popupAdTimeout);
+            // Hide any visible ads
+            const popupAd = document.getElementById('popupAd');
+            if (popupAd) {
+                popupAd.classList.remove('active');
+            }
+            // Enable premium features
+            enablePremiumFeatures();
+        } else {
+            showPremiumPurchaseElements();
+            // Disable premium features
+            disablePremiumFeatures();
+        }
     }
 
     // Enable premium features
@@ -477,50 +536,57 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Handle payment form submission
-    payBtn.addEventListener('click', () => {
-        const phoneNumber = document.getElementById('phoneNumber').value;
+    if (payBtn) {
+        payBtn.addEventListener('click', () => {
+            const phoneNumberInput = document.getElementById('phoneNumber');
+            if (!phoneNumberInput) return;
 
-        if (!validatePhoneNumber(phoneNumber)) {
-            showError('Fadlan geli lambar sax ah oo telefoon ah');
-            return;
-        }
+            const phoneNumber = phoneNumberInput.value;
 
-        // Check if user already has active premium
-        const premiumData = JSON.parse(localStorage.getItem('shukaansiPremium') || '{"isPremium": false, "paymentDate": null}');
-        if (premiumData.isPremium && premiumData.paymentDate) {
-            const paymentDate = new Date(premiumData.paymentDate);
-            const currentDate = new Date();
-            const daysDiff = Math.floor((currentDate - paymentDate) / (1000 * 60 * 60 * 24));
-            
-            if (daysDiff < 30) {
-                showError('Waxaad horey u heysaa premium oo socda. Fadlan sug 30 maalmood.');
+            if (!validatePhoneNumber(phoneNumber)) {
+                showError('Fadlan geli lambar sax ah oo telefoon ah');
                 return;
             }
-        }
 
-        // Show loading state
-        payBtn.textContent = 'La xaqiijinayo...';
-        payBtn.disabled = true;
+            // Check if user already has active premium
+            const premiumData = JSON.parse(localStorage.getItem('shukaansiPremium') || '{"isPremium": false, "paymentDate": null}');
+            if (premiumData.isPremium && premiumData.paymentDate) {
+                const paymentDate = new Date(premiumData.paymentDate);
+                const currentDate = new Date();
+                const daysDiff = Math.floor((currentDate - paymentDate) / (1000 * 60 * 60 * 24));
+                
+                if (daysDiff < 30) {
+                    showError('Waxaad horey u heysaa premium oo socda. Fadlan sug 30 maalmood.');
+                    return;
+                }
+            }
 
-        // Simulate payment verification
-        setTimeout(() => {
-            // Set premium status with current date
-            setPremiumStatus(true, new Date().toISOString());
-            
-            // Show success message
-            payBtn.textContent = 'Waad ku mahadsantahay!';
-            payBtn.style.backgroundColor = '#4CAF50';
-            
-            // Close modal and reset form after 2 seconds
+            // Show loading state
+            payBtn.textContent = 'La xaqiijinayo...';
+            payBtn.disabled = true;
+
+            // Simulate payment verification
             setTimeout(() => {
-                paymentModal.classList.remove('active');
-                resetPaymentForm();
-                payBtn.textContent = 'Xaqiiji Lacagta';
-                payBtn.disabled = false;
-                payBtn.style.backgroundColor = '';
+                // Set premium status with current date
+                setPremiumStatus(true, new Date().toISOString());
+                
+                // Show success message
+                payBtn.textContent = 'Waad ku mahadsantahay!';
+                payBtn.style.backgroundColor = '#4CAF50';
+                
+                // Close modal and reset form after 2 seconds
+                setTimeout(() => {
+                    if (paymentModal) {
+                        paymentModal.classList.remove('active');
+                    }
+                    resetPaymentForm();
+                    payBtn.textContent = 'Xaqiiji Lacagta';
+                    payBtn.disabled = false;
+                    payBtn.style.backgroundColor = '';
+                }, 2000);
             }, 2000);
-        }, 2000);
-    });
+        });
+    }
 
     function validatePhoneNumber(phone) {
         // Simple validation for Somali phone numbers

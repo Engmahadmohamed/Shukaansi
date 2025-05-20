@@ -106,7 +106,7 @@ h1 {
 }
 .chat-input {
     display: flex;
-    gap: 10px;
+    gap:5px;
     padding: 15px;
     background: #fff;
     border-top: 1px solid #ffe0ec;
