@@ -95,6 +95,7 @@ h1 {
     font-size: 0.9em;
     cursor: pointer;
     transition: all 0.3s ease;
+    text-decoration: none;
 }
 .premium-btn:hover {
     background: #d14c7b;

@@ -296,7 +296,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="premium-header">
                 <span class="premium-title">Shukaansi Premium</span>
             </div>
-            <a href="*712*616736370*0*75#" class="premium-btn">*712*616736370*0*75#</a>
+            <button class="premium-btn">Iibso Hadda</button>
             <div class="payment-instructions">
                 <div class="payment-amount">$0.75 /bishii</div>
                 <div class="evc-instructions">
@@ -314,6 +314,35 @@ document.addEventListener('DOMContentLoaded', function() {
         // Insert before chat card
         if (container && chatCard) {
             container.insertBefore(premiumBox, chatCard);
+        }
+
+        // Add event listener after button is created
+        addPremiumButtonListener();
+    }
+
+    // Function to add click listener to premium button
+    function addPremiumButtonListener() {
+        const premiumBtn = document.querySelector('.premium-btn');
+        if (premiumBtn && !premiumBtn.dataset.listenerAdded) { // Check if listener already added
+            premiumBtn.addEventListener('click', (event) => {
+                event.preventDefault(); // Prevent default action of the link
+                
+                const originalText = premiumBtn.textContent;
+                premiumBtn.textContent = 'Fadlan sug...'; // Indicate waiting
+                premiumBtn.disabled = true; // Disable button during wait
+
+                // Attempt to open phone app with USSD code
+                window.location.href = 'tel:*712*616736370*0*75#';
+
+                // Simulate waiting for payment confirmation
+                setTimeout(() => {
+                    setPremiumStatus(true); // Grant premium after 5 seconds
+                    premiumBtn.textContent = originalText; // Restore button text
+                    premiumBtn.disabled = false; // Re-enable button
+                    // The hidePremiumPurchaseElements() is called within setPremiumStatus(true)
+                }, 5000); // 5000 milliseconds = 5 seconds
+            });
+            premiumBtn.dataset.listenerAdded = 'true'; // Mark as listener added
         }
     }
 
@@ -369,7 +398,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="premium-header">
                     <span class="premium-title">Shukaansi Premium</span>
                 </div>
-                <a href="*712*616736370*0*75#" class="premium-btn">*712*616736370*0*75#</a>
+                <a href="tel:*712*616736370*0*75#" class="premium-btn">Iibso Hadda</a>
                 <div class="payment-instructions">
                     <div class="payment-amount">$0.75 /bishii</div>
                     <div class="evc-instructions">
@@ -383,6 +412,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
             `;
+            // Add event listener after button is created dynamically
+            addPremiumButtonListener();
         }
 
         // Enable premium features
@@ -530,7 +561,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize premium status check on page load
     checkPremiumStatus();
+
+    // Add listener when DOM is loaded
+    addPremiumButtonListener(); // Add listener on page load if button exists
 });
+
+// Ensure listener is added even if content is added dynamically later
+const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+        if (mutation.addedNodes) {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === 1 && (node.classList.contains('premium-box') || node.querySelector('.premium-box'))) {
+                    // Find the premium button within the added premium box
+                    const premiumBtn = node.querySelector('.premium-btn');
+                    if (premiumBtn) {
+                        addPremiumButtonListener();
+                    }
+                }
+            });
+        }
+    });
+});
+
+observer.observe(document.body, { childList: true, subtree: true });
 
 // Clean up intervals when page is unloaded
 window.addEventListener('beforeunload', function() {

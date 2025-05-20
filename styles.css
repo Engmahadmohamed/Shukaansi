@@ -9,6 +9,87 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+#userInput {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 100%;
+    max-width: 100%;
+}
+
+#userInput::placeholder {
+    color: #999;
+    font-size: 13px;
+}
+
+#sendBtn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+    min-width: 60px;
+}
+
+#sendBtn:hover {
+    background-color: #45a049;
+}
+
+#sendBtn:active {
+    background-color: #3d8b40;
+}
+
+/* Mobile optimization */
+@media screen and (max-width: 480px) {
+    .input-container {
+        padding: 6px;
+        gap: 6px;
+    }
+
+    #userInput {
+        padding: 8px;
+        font-size: 13px;
+    }
+
+    #userInput::placeholder {
+        font-size: 12px;
+    }
+
+    #sendBtn {
+        padding: 8px 12px;
+        font-size: 13px;
+        min-width: 50px;
+    }
+}
+
+/* Small mobile devices */
+@media screen and (max-width: 360px) {
+    .input-container {
+        padding: 4px;
+        gap: 4px;
+    }
+
+    #userInput {
+        padding: 6px;
+        font-size: 12px;
+    }
+
+    #userInput::placeholder {
+        font-size: 11px;
+    }
+
+    #sendBtn {
+        padding: 6px 10px;
+        font-size: 12px;
+        min-width: 45px;
+    }
+}
+
 .message .message-text img {
     display: inline-block;
     max-width: 30px;
